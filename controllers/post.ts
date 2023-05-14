@@ -1,5 +1,5 @@
 import { Response } from 'express'
-import { RequestWithUser, TypedRequestBody, TypedRequestQuery } from '../types/request'
+import { TypedRequestBody } from '../types/request'
 import { CreateData, UpdateData } from './types/post'
 import { HOST } from '../core/config'
 import { Post } from '../models'
@@ -21,37 +21,45 @@ export const create = async (req: TypedRequestBody<CreateData>, res: Response) =
 
     res.send(newPost.dataValues)
   } catch (err) {
-    res.status(404)
+    res.status(404).send("error")
   }
 }
 
 
-export const get = async (req: TypedRequestQuery<{ page: number }>, res: Response) => {
+export const get = async (req: TypedRequestBody<{}, { page: number }>, res: Response) => {
   try {
     const limit = 20
     const range = req.query.page
     const data = (await Post.findAll({ limit: 20, offset: (range - 1) * limit }))
     res.send(data)
   } catch (err) {
-    res.status(404)
+    res.status(404).send("error")
   }
 }
 
-export const deleteOne = async (req: TypedRequestQuery<{ id: number }>, res: Response) => {
+export const deleteOne = async (req: TypedRequestBody<{}, { id: number }>, res: Response) => {
   try {
-    await Post.destroy({ where: { id: req.query.id } })
-    res.send("deleted")
+    const post = (await Post.findOne({ where: { id: req.query.id } }))?.dataValues
+    if(req.user && req.user.firstName + req.user.lastName === post.author) {
+      await Post.destroy({ where: { id: req.query.id } })
+      return res.send("deleted")
+    }
+    res.status(404).send("error")
   } catch (err) {
-    res.status(404)
+    res.status(404).send("error")
   }
 }
 
 
 export const update = async (req: TypedRequestBody<UpdateData>, res: Response) => {
   try {
-    await Post.update({ text: req.body.text }, { where: { id: req.body.id } })
-    res.send('updated')
+    const post = (await Post.findOne({ where: { id: req.body.id } }))?.dataValues
+    if(req.user && `${req.user.firstName} ${req.user.lastName}` === post.author) {
+      await Post.update({ text: req.body.text }, { where: { id: req.body.id } })
+      return res.send('updated')
+    }
+    res.status(404).send("error")
   } catch (err) {
-    res.status(404)
+    res.status(404).send("error")
   }
 }

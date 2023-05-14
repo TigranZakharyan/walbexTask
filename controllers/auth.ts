@@ -1,6 +1,6 @@
 import { NextFunction, Response } from 'express'
 import { User } from '../models'
-import { RequestWithUser, TypedRequestBody } from '../types/request'
+import { TypedRequestBody } from '../types/request'
 import { LoginBody, RegistrationBody } from './types/auth'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
@@ -24,7 +24,7 @@ export const registration = async(req: TypedRequestBody<RegistrationBody>, res: 
     }
     res.send(response)
   } catch (err) {
-    res.status(404)
+    res.status(404).send("error")
   }
 }
 
@@ -48,11 +48,11 @@ export const login = async(req: TypedRequestBody<LoginBody>, res: Response) => {
     }
     res.send(response)
   } catch (err) {
-    res.status(404)
+    res.status(404).send("error")
   }
 }
 
-export const authenticateJWT = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+export const authenticateJWT = async (req: TypedRequestBody, res: Response, next: NextFunction) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
   if (token) {
       const decoded = jwt.verify(token, TOKEN_KEY as string) as { user_id: number }
