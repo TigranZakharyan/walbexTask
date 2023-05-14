@@ -6,7 +6,7 @@ export const Post = sequelize.define('post', {
     type: DataTypes.STRING
   },
   media: {
-    type: DataTypes.BLOB('long')
+    type: DataTypes.STRING
   },
   author: {
     type: DataTypes.STRING,
